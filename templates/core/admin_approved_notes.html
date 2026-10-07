@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Approved Notes Directory – Admin Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <h1 style="font-size: 2rem; font-weight: 800; color: var(--dark); margin: 0;">
+          Approved Notes Catalogue
+        </h1>
+        <span class="badge badge-approved">{{ notes|length }} LIVE</span>
+      </div>
+      <p style="color: var(--text-muted); font-size: 1rem; margin-top: 4px;">
+        All study materials currently published and available to students across departments.
+      </p>
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">&larr; Dashboard</a>
+      <a href="{% url 'admin_pending_notes' %}" class="btn btn-primary">Pending Notes Queue</a>
+    </div>
+  </div>
+
+  {% if notes %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Note Title</th>
+            <th>Subject / Code</th>
+            <th>Module</th>
+            <th>Uploaded By</th>
+            <th>Published Date</th>
+            <th>Downloads</th>
+            <th>File</th>
+            <th>Administrative Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for note in notes %}
+            <tr>
+              <td>
+                <a href="{% url 'note_details' note.id %}" style="font-weight: 700; color: var(--dark);">
+                  {{ note.title }}
+                </a>
+              </td>
+              <td>
+                <div>{{ note.subject }}</div>
+                <small class="badge badge-purple" style="font-size: 0.72rem;">{{ note.course_id }}</small>
+              </td>
+              <td><span class="badge badge-orange">{{ note.module }}</span></td>
+              <td>
+                <div>{{ note.uploaded_by.name }}</div>
+                <small style="color: var(--text-muted);">{{ note.uploaded_by.usn }}</small>
+              </td>
+              <td>{{ note.uploaded_at|date:"M d, Y" }}</td>
+              <td><strong>{{ note.downloads_count }}</strong></td>
+              <td>
+                <a href="{% url 'download_note' note.id %}" class="btn btn-sm btn-outline-secondary">
+                  ⬇ {{ note.file_extension }}
+                </a>
+              </td>
+              <td>
+                <div style="display: flex; gap: 6px;">
+                  <a href="{% url 'note_details' note.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                  <!-- Revoke / Reject -->
+                  <button type="button" class="btn btn-sm btn-outline-secondary" style="color: var(--danger); border-color: #FECACA;"
+                          onclick="openRejectModal('{% url 'admin_note_action' note.id 'reject' %}', '{{ note.title }}', 'Note')">
+                    Revoke
+                  </button>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="card" style="text-align: center; padding: 4rem 1rem;">
+      <div style="font-size: 3rem; margin-bottom: 1rem;">📂</div>
+      <h3 style="color: var(--dark); margin-bottom: 0.5rem;">No Approved Notes Yet</h3>
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+        Approve notes from the pending review queue to make them available here.
+      </p>
+      <a href="{% url 'admin_pending_notes' %}" class="btn btn-primary">Check Pending Notes</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

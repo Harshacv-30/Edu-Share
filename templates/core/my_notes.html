@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}My Uploaded Notes – EduShare{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <h1 style="font-size: 2rem; font-weight: 800; color: var(--dark); margin-bottom: 0.25rem;">
+        My Uploaded Notes
+      </h1>
+      <p style="color: var(--text-muted); font-size: 1rem;">
+        Track the moderation and publication status of all notes you have submitted.
+      </p>
+    </div>
+
+    {% if student.upload_permission %}
+      <a href="{% url 'upload_note' %}" class="btn btn-accent">+ Upload New Note</a>
+    {% else %}
+      <span class="badge badge-gray" style="padding: 8px 14px;">Upload Permission Restricted</span>
+    {% endif %}
+  </div>
+
+  <!-- Status Counters -->
+  <div class="stats-grid" style="margin: 0 0 2rem 0;">
+    <div class="stat-card">
+      <div class="stat-icon orange">⏳</div>
+      <div>
+        <div class="stat-number">{{ pending_count }}</div>
+        <div class="stat-label">Pending Admin Review</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon green">✓</div>
+      <div>
+        <div class="stat-number">{{ approved_count }}</div>
+        <div class="stat-label">Approved & Published</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon red">✕</div>
+      <div>
+        <div class="stat-number">{{ rejected_count }}</div>
+        <div class="stat-label">Rejected Submissions</div>
+      </div>
+    </div>
+  </div>
+
+  {% if notes %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Note Title</th>
+            <th>Subject / Code</th>
+            <th>Module</th>
+            <th>Submitted On</th>
+            <th>Moderation Status</th>
+            <th>Downloads</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for note in notes %}
+            <tr>
+              <td>
+                <div style="font-weight: 700; color: var(--dark);">{{ note.title }}</div>
+                <small style="color: var(--text-muted);">{{ note.filename }} ({{ note.file_extension }})</small>
+              </td>
+              <td>
+                <div>{{ note.subject }}</div>
+                <small class="badge badge-purple" style="font-size: 0.72rem; padding: 2px 6px;">{{ note.course_id }}</small>
+              </td>
+              <td><span class="badge badge-orange">{{ note.module }}</span></td>
+              <td>{{ note.uploaded_at|date:"M d, Y" }}</td>
+              <td>
+                {% if note.status == 'PENDING' %}
+                  <span class="badge badge-pending">PENDING APPROVAL</span>
+                  <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">In admin review queue</div>
+                {% elif note.status == 'APPROVED' %}
+                  <span class="badge badge-approved">APPROVED ✓</span>
+                  <div style="font-size: 0.78rem; color: var(--success); margin-top: 4px;">Live for all students</div>
+                {% elif note.status == 'REJECTED' %}
+                  <span class="badge badge-rejected">REJECTED ✕</span>
+                  {% if note.rejection_reason %}
+                    <div style="font-size: 0.78rem; color: var(--danger); margin-top: 4px;">
+                      <em>"{{ note.rejection_reason }}"</em>
+                    </div>
+                  {% endif %}
+                {% endif %}
+              </td>
+              <td><strong>{{ note.downloads_count }}</strong></td>
+              <td>
+                <div style="display: flex; gap: 6px;">
+                  <a href="{% url 'note_details' note.id %}" class="btn btn-sm btn-outline-primary">Details</a>
+                  <a href="{% url 'download_note' note.id %}" class="btn btn-sm btn-outline-secondary">Download</a>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="card" style="text-align: center; padding: 4rem 1rem;">
+      <div style="font-size: 3rem; margin-bottom: 1rem;">📝</div>
+      <h3 style="color: var(--dark); margin-bottom: 0.5rem;">No Notes Uploaded Yet</h3>
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+        When you submit notes for moderation, they will appear here with live approval status.
+      </p>
+      {% if student.upload_permission %}
+        <a href="{% url 'upload_note' %}" class="btn btn-accent">+ Upload Your First Note</a>
+      {% else %}
+        <div style="color: var(--text-muted); font-size: 0.9rem;">
+          <em>You need upload permission from the administrator to submit notes.</em>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

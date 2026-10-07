@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Registration – EduShare{% endblock %}
+
+{% block content %}
+<div class="container container-narrow">
+  <div class="card" style="margin-top: 1rem; border-top: 5px solid var(--primary);">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <div style="width: 54px; height: 54px; margin: 0 auto 1rem; background: var(--primary-subtle); color: var(--primary); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+        🎓
+      </div>
+      <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--dark); margin-bottom: 0.5rem;">
+        Student Registration
+      </h1>
+      <p style="color: var(--text-muted); font-size: 0.95rem;">
+        Create your student account to access course notes and academic materials.
+      </p>
+    </div>
+
+    <!-- Approval notice banner -->
+    <div class="alert alert-info" style="margin-bottom: 2rem;">
+      <span>ℹ</span>
+      <div>
+        <strong>Registration Approval Notice:</strong> After submitting, your registration will be set to <strong>PENDING</strong>. You will be able to access the Student Dashboard once your campus administrator reviews and approves your account.
+      </div>
+    </div>
+
+    <form method="POST" action="{% url 'student_register' %}" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {% for error in form.non_field_errors %}
+            <div>{{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.name.id_for_label }}">Full Name *</label>
+        {{ form.name }}
+        {% if form.name.errors %}
+          <div class="form-error">{{ form.name.errors.0 }}</div>
+        {% endif %}
+        <div class="form-text">Enter your official name as registered with the college.</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.usn.id_for_label }}">University Seat Number (USN) *</label>
+        {{ form.usn }}
+        {% if form.usn.errors %}
+          <div class="form-error">{{ form.usn.errors.0 }}</div>
+        {% endif %}
+        <div class="form-text">Example: 1RV21CS001, 1MS22IS045 (Used as your Login ID).</div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label" for="{{ form.branch.id_for_label }}">Branch / Department *</label>
+          {{ form.branch }}
+          {% if form.branch.errors %}
+            <div class="form-error">{{ form.branch.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="{{ form.semester.id_for_label }}">Current Semester *</label>
+          {{ form.semester }}
+          {% if form.semester.errors %}
+            <div class="form-error">{{ form.semester.errors.0 }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.section.id_for_label }}">Section *</label>
+        {{ form.section }}
+        {% if form.section.errors %}
+          <div class="form-error">{{ form.section.errors.0 }}</div>
+        {% endif %}
+        <div class="form-text">e.g. A, B, C, D</div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label" for="{{ form.password.id_for_label }}">Password *</label>
+          {{ form.password }}
+          {% if form.password.errors %}
+            <div class="form-error">{{ form.password.errors.0 }}</div>
+          {% endif %}
+          <div class="form-text">Minimum 6 characters</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="{{ form.confirm_password.id_for_label }}">Confirm Password *</label>
+          {{ form.confirm_password }}
+          {% if form.confirm_password.errors %}
+            <div class="form-error">{{ form.confirm_password.errors.0 }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div style="margin-top: 2rem;">
+        <button type="submit" class="btn btn-lg btn-primary" style="width: 100%;">
+          Submit Student Registration
+        </button>
+      </div>
+
+      <div style="text-align: center; margin-top: 1.5rem; font-size: 0.92rem; color: var(--text-muted);">
+        Already registered? <a href="{% url 'student_login' %}" style="font-weight: 600; color: var(--accent);">Login with USN</a>
+        &nbsp;|&nbsp;
+        <a href="{% url 'waiting_approval' %}" style="color: var(--primary);">Check Approval Status</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

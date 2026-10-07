@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard – EduShare{% endblock %}
+
+{% block content %}
+<div class="container">
+  <!-- Admin Header -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <h1 style="font-size: 2rem; font-weight: 800; color: var(--dark); margin: 0;">
+          Administrator Control Center
+        </h1>
+        <span class="badge badge-purple">SYSTEM ADMIN</span>
+      </div>
+      <p style="color: var(--text-muted); font-size: 1rem; margin-top: 4px;">
+        Oversee student approvals, assign upload permissions, and moderate academic notes submissions.
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <a href="{% url 'admin_manage_students' %}" class="btn btn-outline-primary">Manage Students</a>
+      <a href="{% url 'admin_upload_permissions' %}" class="btn btn-outline-accent">Upload Permissions</a>
+      <a href="{% url 'admin_pending_notes' %}" class="btn btn-primary">Notes Review Queue</a>
+    </div>
+  </div>
+
+  <!-- KPI Metrics Grid -->
+  <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin-bottom: 2.5rem;">
+    <div class="stat-card" style="border-left: 4px solid var(--warning);">
+      <div>
+        <div class="stat-number" style="color: var(--warning);">{{ pending_students_count }}</div>
+        <div class="stat-label">Pending Students</div>
+      </div>
+    </div>
+
+    <div class="stat-card" style="border-left: 4px solid var(--success);">
+      <div>
+        <div class="stat-number" style="color: var(--success);">{{ approved_students_count }}</div>
+        <div class="stat-label">Approved Students</div>
+      </div>
+    </div>
+
+    <div class="stat-card" style="border-left: 4px solid var(--danger);">
+      <div>
+        <div class="stat-number" style="color: var(--danger);">{{ rejected_students_count }}</div>
+        <div class="stat-label">Rejected Students</div>
+      </div>
+    </div>
+
+    <div class="stat-card" style="border-left: 4px solid var(--primary);">
+      <div>
+        <div class="stat-number" style="color: var(--primary);">{{ upload_granted_count }}</div>
+        <div class="stat-label">Upload Privileges</div>
+      </div>
+    </div>
+
+    <div class="stat-card" style="border-left: 4px solid var(--accent);">
+      <div>
+        <div class="stat-number" style="color: var(--accent);">{{ pending_notes_count }}</div>
+        <div class="stat-label">Pending Notes</div>
+      </div>
+    </div>
+
+    <div class="stat-card" style="border-left: 4px solid var(--success);">
+      <div>
+        <div class="stat-number" style="color: var(--success);">{{ approved_notes_count }}</div>
+        <div class="stat-label">Approved Notes</div>
+      </div>
+    </div>
+
+    <div class="stat-card" style="border-left: 4px solid #64748B;">
+      <div>
+        <div class="stat-number" style="color: #64748B;">{{ rejected_notes_count }}</div>
+        <div class="stat-label">Rejected Notes</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 1: Pending Student Registrations Queue -->
+  <div class="card" style="margin-bottom: 2.5rem; border-top: 4px solid var(--warning);">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title" style="display: flex; align-items: center; gap: 8px;">
+          <span>⏳</span> Pending Student Registrations
+          {% if pending_students_count > 0 %}
+            <span class="badge badge-pending">{{ pending_students_count }} Action Required</span>
+          {% endif %}
+        </h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
+          Students cannot access the Student Dashboard until approved here.
+        </p>
+      </div>
+      <a href="{% url 'admin_manage_students' %}?status=pending" class="btn btn-sm btn-outline-secondary">
+        View All Pending &rarr;
+      </a>
+    </div>
+
+    {% if pending_students %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>USN</th>
+              <th>Branch / Department</th>
+              <th>Sem / Sec</th>
+              <th>Registered At</th>
+              <th>Status</th>
+              <th>Administrative Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for student in pending_students %}
+              <tr>
+                <td><strong>{{ student.name }}</strong></td>
+                <td><code style="font-weight: 700; color: var(--primary);">{{ student.usn }}</code></td>
+                <td>{{ student.branch }}</td>
+                <td>Sem {{ student.semester }} ({{ student.section }})</td>
+                <td>{{ student.created_at|date:"M d, Y h:i A" }}</td>
+                <td><span class="badge badge-pending">PENDING</span></td>
+                <td>
+                  <div style="display: flex; gap: 8px;">
+                    <!-- Approve Button -->
+                    <form method="POST" action="{% url 'admin_student_action' student.id 'approve' %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                      <button type="submit" class="btn btn-sm btn-success">✓ Approve</button>
+                    </form>
+
+                    <!-- Reject Button triggering modal -->
+                    <button type="button" class="btn btn-sm btn-danger"
+                            onclick="openRejectModal('{% url 'admin_student_action' student.id 'reject' %}', '{{ student.name }} ({{ student.usn }})', 'Student')">
+                      ✕ Reject
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.95rem;">
+        ✓ All student registrations have been reviewed. No pending students!
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- SECTION 2: Pending Notes Moderation Queue -->
+  <div class="card" style="margin-bottom: 2.5rem; border-top: 4px solid var(--accent);">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title" style="display: flex; align-items: center; gap: 8px;">
+          <span>📋</span> Pending Academic Notes for Review
+          {% if pending_notes_count > 0 %}
+            <span class="badge badge-orange">{{ pending_notes_count }} Notes Waiting</span>
+          {% endif %}
+        </h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
+          Only approved notes become visible to students in the repository.
+        </p>
+      </div>
+      <a href="{% url 'admin_pending_notes' %}" class="btn btn-sm btn-outline-secondary">
+        Full Queue &rarr;
+      </a>
+    </div>
+
+    {% if pending_notes %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Note Title</th>
+              <th>Subject & Code</th>
+              <th>Module</th>
+              <th>Uploaded By</th>
+              <th>File</th>
+              <th>Date</th>
+              <th>Review Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for note in pending_notes %}
+              <tr>
+                <td>
+                  <strong>{{ note.title }}</strong>
+                  <div style="font-size: 0.8rem; color: var(--text-muted);">{{ note.description|truncatewords:10 }}</div>
+                </td>
+                <td>
+                  <div>{{ note.subject }}</div>
+                  <span class="badge badge-purple" style="font-size: 0.72rem;">{{ note.course_id }}</span>
+                </td>
+                <td><span class="badge badge-orange">{{ note.module }}</span></td>
+                <td>
+                  <div>{{ note.uploaded_by.name }}</div>
+                  <small style="color: var(--text-muted);">USN: {{ note.uploaded_by.usn }}</small>
+                </td>
+                <td>
+                  <a href="{% url 'download_note' note.id %}" class="btn btn-sm btn-outline-secondary">
+                    ⬇ {{ note.file_extension }}
+                  </a>
+                </td>
+                <td>{{ note.uploaded_at|date:"M d, Y" }}</td>
+                <td>
+                  <div style="display: flex; gap: 8px;">
+                    <!-- Approve Button -->
+                    <form method="POST" action="{% url 'admin_note_action' note.id 'approve' %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                      <button type="submit" class="btn btn-sm btn-success">✓ Approve</button>
+                    </form>
+
+                    <!-- Reject Button -->
+                    <button type="button" class="btn btn-sm btn-danger"
+                            onclick="openRejectModal('{% url 'admin_note_action' note.id 'reject' %}', '{{ note.title }}', 'Note')">
+                      ✕ Reject
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.95rem;">
+        ✓ Notes moderation queue is completely clear. No pending notes!
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- SECTION 3: Quick Navigation to Dedicated Sections -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+    <div class="card card-hover">
+      <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--dark); margin-bottom: 0.5rem;">
+        👥 Manage All Students
+      </h3>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+        View, filter and manage pending, approved, and rejected students with one-click actions.
+      </p>
+      <a href="{% url 'admin_manage_students' %}" class="btn btn-outline-primary" style="width: 100%;">
+        Open Student Directory &rarr;
+      </a>
+    </div>
+
+    <div class="card card-hover">
+      <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--dark); margin-bottom: 0.5rem;">
+        🔑 Upload Permissions
+      </h3>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+        Grant or revoke note upload permission to approved students individually.
+      </p>
+      <a href="{% url 'admin_upload_permissions' %}" class="btn btn-outline-accent" style="width: 100%;">
+        Manage Upload Permissions &rarr;
+      </a>
+    </div>
+
+    <div class="card card-hover">
+      <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--dark); margin-bottom: 0.5rem;">
+        📚 Approved & Rejected Notes
+      </h3>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+        View published notes catalogue or review reasons for rejected notes.
+      </p>
+      <div style="display: flex; gap: 8px;">
+        <a href="{% url 'admin_approved_notes' %}" class="btn btn-sm btn-outline-secondary" style="flex: 1;">Approved ({{ approved_notes_count }})</a>
+        <a href="{% url 'admin_rejected_notes' %}" class="btn btn-sm btn-outline-secondary" style="flex: 1;">Rejected ({{ rejected_notes_count }})</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

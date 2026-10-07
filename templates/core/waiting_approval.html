@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Waiting for Admin Approval – EduShare{% endblock %}
+
+{% block content %}
+<div class="container container-narrow" style="max-width: 680px;">
+  <div class="card" style="margin-top: 1.5rem; text-align: center; border-top: 5px solid var(--warning);">
+    
+    <div style="width: 64px; height: 64px; margin: 0 auto 1.25rem; background: var(--warning-subtle); color: var(--warning); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; font-size: 2rem;">
+      ⏳
+    </div>
+
+    <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--dark); margin-bottom: 0.75rem;">
+      Registration Approval Status
+    </h1>
+
+    <p style="color: var(--text-muted); font-size: 1.05rem; margin-bottom: 2rem;">
+      All student registrations require official administrator approval before granting access to the Student Dashboard.
+    </p>
+
+    <!-- Real-time Status Lookup Form -->
+    <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 2rem; text-align: left;">
+      <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--dark); margin-bottom: 0.75rem;">
+        Check Your USN Status
+      </h3>
+      <form method="GET" action="{% url 'waiting_approval' %}" style="display: flex; gap: 10px;">
+        <input type="text" name="usn" value="{{ usn_query }}" class="form-control text-uppercase" placeholder="Enter your USN (e.g. 1RV21CS001)" required style="flex: 1;">
+        <button type="submit" class="btn btn-primary">Check Status</button>
+      </form>
+    </div>
+
+    <!-- Result Display if queried or redirected from registration -->
+    {% if searched %}
+      {% if student %}
+        <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.75rem; text-align: left; background: white; margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+            <div>
+              <h2 style="font-size: 1.2rem; font-weight: 700; color: var(--dark);">{{ student.name }}</h2>
+              <div style="font-size: 0.88rem; color: var(--text-muted);">USN: <strong>{{ student.usn }}</strong> | {{ student.branch }}</div>
+            </div>
+            <div>
+              {% if student.is_pending %}
+                <span class="badge badge-pending">STATUS: PENDING APPROVAL</span>
+              {% elif student.is_approved %}
+                <span class="badge badge-approved">STATUS: APPROVED ✓</span>
+              {% elif student.is_rejected %}
+                <span class="badge badge-rejected">STATUS: REJECTED</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div style="font-size: 0.92rem; line-height: 1.7;">
+            <div><strong>Academic Details:</strong> Semester {{ student.semester }}, Section {{ student.section }}</div>
+            <div><strong>Registration Date:</strong> {{ student.created_at|date:"F d, Y, h:i A" }}</div>
+            <div><strong>Upload Permission:</strong> 
+              {% if student.upload_permission %}
+                <span style="color: var(--success); font-weight: 600;">Granted</span>
+              {% else %}
+                <span style="color: var(--text-muted);">Not Granted (Browse & Download Only)</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px dashed var(--border-color);">
+            {% if student.is_pending %}
+              <div class="alert alert-warning" style="margin-bottom: 0;">
+                <span>⏳</span>
+                <div>
+                  <strong>Registration Successful. Please wait for Admin approval.</strong><br>
+                  Your details have been submitted to campus administrators. Once reviewed, you will be able to log in to the Student Dashboard.
+                </div>
+              </div>
+            {% elif student.is_approved %}
+              <div class="alert alert-success" style="margin-bottom: 1rem;">
+                <span>✓</span>
+                <div>
+                  <strong>Congratulations! Your registration has been approved.</strong><br>
+                  You can now log in using your USN and password to access the Student Dashboard.
+                </div>
+              </div>
+              <a href="{% url 'student_login' %}" class="btn btn-accent" style="width: 100%;">
+                Proceed to Student Login &rarr;
+              </a>
+            {% elif student.is_rejected %}
+              <div class="alert alert-danger" style="margin-bottom: 0;">
+                <span>✕</span>
+                <div>
+                  <strong>Registration Rejected:</strong> Your student account was not approved by administration.<br>
+                  {% if student.rejection_reason %}
+                    <em>Reason: {{ student.rejection_reason }}</em><br>
+                  {% endif %}
+                  Please contact your college administrator for assistance.
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      {% else %}
+        <div class="alert alert-danger" style="text-align: left;">
+          <span>✕</span>
+          <div>No registered student found with USN "<strong>{{ usn_query }}</strong>". Please verify your USN or register again.</div>
+        </div>
+      {% endif %}
+    {% else %}
+      <div class="alert alert-info" style="text-align: left;">
+        <span>ℹ</span>
+        <div>
+          If you just registered, your status is <strong>PENDING</strong>. Enter your USN above to check whether the administrator has approved your account.
+        </div>
+      </div>
+    {% endif %}
+
+    <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+      <a href="{% url 'home' %}" class="btn btn-outline-secondary">&larr; Return to Home</a>
+      <a href="{% url 'student_login' %}" class="btn btn-outline-primary">Student Login</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home – EduShare Notes Platform{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero" style="margin-top: -2.5rem;">
+  <div class="container hero-grid">
+    <div>
+      <div class="hero-tagline">
+        <span>★</span> Academic Excellence & Collaborative Learning
+      </div>
+      <h1 class="hero-title">
+        Verified Notes for <span class="highlight-purple">Engineers & Scholars</span> by <span class="highlight-orange">EduShare</span>
+      </h1>
+      <p class="hero-desc">
+        Access peer-reviewed, syllabus-aligned academic notes, question banks, and lab resources. Every student is verified and all notes undergo administrative quality review before publishing.
+      </p>
+
+      <div class="hero-actions">
+        <a href="{% url 'browse_notes' %}" class="btn btn-lg btn-primary">
+          🔍 Browse Approved Notes
+        </a>
+        {% if not user.is_authenticated %}
+          <a href="{% url 'student_register' %}" class="btn btn-lg btn-outline-accent">
+            Student Registration
+          </a>
+          <a href="{% url 'admin_login' %}" class="btn btn-lg btn-outline-secondary">
+            Admin Portal
+          </a>
+        {% elif is_admin %}
+          <a href="{% url 'admin_dashboard' %}" class="btn btn-lg btn-accent">
+            Go to Admin Dashboard
+          </a>
+        {% elif is_student %}
+          <a href="{% url 'student_dashboard' %}" class="btn btn-lg btn-accent">
+            Go to Student Dashboard
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Hero Card / Quick Search -->
+    <div class="hero-card">
+      <h3 style="font-size: 1.3rem; font-weight: 700; color: var(--dark); margin-bottom: 0.5rem;">
+        Find Notes Quickly
+      </h3>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+        Filter by subject name, course code, or syllabus module.
+      </p>
+
+      <form method="GET" action="{% url 'browse_notes' %}">
+        <div class="form-group">
+          <label class="form-label">Search Query</label>
+          <input type="text" name="q" class="form-control" placeholder="e.g. Operating Systems, Data Structures, 21CS51...">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;" class="form-group">
+          <div>
+            <label class="form-label">Course ID</label>
+            <input type="text" name="course_id" class="form-control" placeholder="e.g. 21CS51">
+          </div>
+          <div>
+            <label class="form-label">Module</label>
+            <select name="module" class="form-select">
+              <option value="">All Modules</option>
+              <option value="Module 1">Module 1</option>
+              <option value="Module 2">Module 2</option>
+              <option value="Module 3">Module 3</option>
+              <option value="Module 4">Module 4</option>
+              <option value="Module 5">Module 5</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-accent" style="width: 100%;">
+          Search Repository
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Grid -->
+<div class="container">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon purple">📚</div>
+      <div>
+        <div class="stat-number">{{ total_notes }}</div>
+        <div class="stat-label">Approved Notes Available</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon orange">🎓</div>
+      <div>
+        <div class="stat-number">{{ total_students }}</div>
+        <div class="stat-label">Active Approved Students</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon green">🏛</div>
+      <div>
+        <div class="stat-number">{{ branches_count }}</div>
+        <div class="stat-label">Academic Departments</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon purple">🛡</div>
+      <div>
+        <div class="stat-number">100%</div>
+        <div class="stat-label">Admin Verified Material</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- How It Works Section -->
+  <div style="margin: 3.5rem 0;">
+    <div style="text-align: center; margin-bottom: 2.5rem;">
+      <h2 style="font-size: 2rem; font-weight: 800; color: var(--dark);">How EduShare Operates</h2>
+      <p style="color: var(--text-muted); font-size: 1.05rem; max-width: 600px; margin: 0.5rem auto 0;">
+        A strict, trusted academic workflow designed for quality control and institutional security.
+      </p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem;">
+      <div class="card" style="border-top: 4px solid var(--primary);">
+        <div style="font-size: 2rem; margin-bottom: 0.75rem;">1️⃣</div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--dark);">Student Registration</h3>
+        <p style="font-size: 0.9rem; color: var(--text-muted);">
+          Students register with USN, branch, semester & section. Registrations default to <strong>PENDING</strong> status and cannot access the student dashboard until verified.
+        </p>
+      </div>
+
+      <div class="card" style="border-top: 4px solid var(--accent);">
+        <div style="font-size: 2rem; margin-bottom: 0.75rem;">2️⃣</div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--dark);">Admin Verification</h3>
+        <p style="font-size: 0.9rem; color: var(--text-muted);">
+          Campus administrator reviews student credentials. Once approved, the student gains access to browse and download approved course material.
+        </p>
+      </div>
+
+      <div class="card" style="border-top: 4px solid var(--primary);">
+        <div style="font-size: 2rem; margin-bottom: 0.75rem;">3️⃣</div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--dark);">Upload Permission</h3>
+        <p style="font-size: 0.9rem; color: var(--text-muted);">
+          Approval alone does NOT grant upload capability. Administrators manually grant explicit upload authorization to select, trusted students.
+        </p>
+      </div>
+
+      <div class="card" style="border-top: 4px solid var(--accent);">
+        <div style="font-size: 2rem; margin-bottom: 0.75rem;">4️⃣</div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--dark);">Note Quality Review</h3>
+        <p style="font-size: 0.9rem; color: var(--text-muted);">
+          Uploaded notes enter a pending moderation queue. Administrators review the file before approving, ensuring only authentic materials reach students.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Approved Notes -->
+  <div style="margin: 3.5rem 0;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem;">
+      <div>
+        <h2 style="font-size: 1.75rem; font-weight: 800; color: var(--dark);">Latest Approved Notes</h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Recently published notes ready for download</p>
+      </div>
+      <a href="{% url 'browse_notes' %}" class="btn btn-outline-primary">View All Notes &rarr;</a>
+    </div>
+
+    {% if recent_notes %}
+      <div class="notes-grid">
+        {% for note in recent_notes %}
+          <div class="note-card">
+            <div class="note-header">
+              <span class="badge badge-purple">{{ note.course_id }}</span>
+              <span class="badge badge-orange">{{ note.module }}</span>
+            </div>
+
+            <h3 class="note-title">
+              <a href="{% url 'note_details' note.id %}" style="color: var(--dark);">{{ note.title }}</a>
+            </h3>
+
+            <div class="note-meta">
+              <span style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">{{ note.subject }}</span>
+            </div>
+
+            <p class="note-desc">{{ note.description|truncatewords:20 }}</p>
+
+            <div class="note-footer">
+              <div>
+                <span>👤 {{ note.uploaded_by.name }}</span><br>
+                <small>{{ note.uploaded_at|date:"M d, Y" }}</small>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <a href="{% url 'note_details' note.id %}" class="btn btn-sm btn-outline-secondary">Details</a>
+                <a href="{% url 'download_note' note.id %}" class="btn btn-sm btn-accent">⬇ Download</a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card" style="text-align: center; padding: 3rem 1rem;">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📂</div>
+        <h3 style="color: var(--dark); margin-bottom: 0.5rem;">No Approved Notes Published Yet</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Once students upload notes and administrators approve them, they will appear here.</p>
+        <a href="{% url 'student_register' %}" class="btn btn-primary">Register as Student</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

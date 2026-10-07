@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Login – EduShare{% endblock %}
+
+{% block content %}
+<div class="container container-narrow" style="max-width: 520px;">
+  <div class="card" style="margin-top: 1.5rem; border-top: 5px solid var(--accent);">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <div style="width: 54px; height: 54px; margin: 0 auto 1rem; background: var(--accent-subtle); color: var(--accent); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+        🔐
+      </div>
+      <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--dark); margin-bottom: 0.5rem;">
+        Student Login
+      </h1>
+      <p style="color: var(--text-muted); font-size: 0.95rem;">
+        Sign in with your University Seat Number (USN)
+      </p>
+    </div>
+
+    <form method="POST" action="{% url 'student_login' %}" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {% for error in form.non_field_errors %}
+            <div>{{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.usn.id_for_label }}">University Seat Number (USN)</label>
+        {{ form.usn }}
+        {% if form.usn.errors %}
+          <div class="form-error">{{ form.usn.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.password.id_for_label }}">Password</label>
+        {{ form.password }}
+        {% if form.password.errors %}
+          <div class="form-error">{{ form.password.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div style="margin-top: 2rem;">
+        <button type="submit" class="btn btn-lg btn-accent" style="width: 100%;">
+          Sign In to Dashboard
+        </button>
+      </div>
+
+      <div style="text-align: center; margin-top: 1.5rem; font-size: 0.92rem; color: var(--text-muted);">
+        Don't have an account? <a href="{% url 'student_register' %}" style="font-weight: 600; color: var(--primary);">Register as Student</a>
+        <br><br>
+        <a href="{% url 'waiting_approval' %}" style="color: var(--text-muted); text-decoration: underline;">
+          Check Registration Approval Status
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

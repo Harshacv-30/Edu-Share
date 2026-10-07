@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Rejected Notes Archive – Admin Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <h1 style="font-size: 2rem; font-weight: 800; color: var(--dark); margin: 0;">
+          Rejected Notes Archive
+        </h1>
+        <span class="badge badge-rejected">{{ notes|length }} REJECTED</span>
+      </div>
+      <p style="color: var(--text-muted); font-size: 1rem; margin-top: 4px;">
+        Submissions that did not meet moderation standards or curriculum guidelines.
+      </p>
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">&larr; Dashboard</a>
+      <a href="{% url 'admin_pending_notes' %}" class="btn btn-primary">Pending Queue &rarr;</a>
+    </div>
+  </div>
+
+  {% if notes %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Note Title</th>
+            <th>Subject / Code</th>
+            <th>Uploaded By</th>
+            <th>Rejected Date</th>
+            <th>Rejection Reason</th>
+            <th>File</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for note in notes %}
+            <tr>
+              <td>
+                <div style="font-weight: 700; color: var(--dark);">{{ note.title }}</div>
+                <small style="color: var(--text-muted);">{{ note.module }}</small>
+              </td>
+              <td>
+                <div>{{ note.subject }}</div>
+                <small class="badge badge-purple" style="font-size: 0.72rem;">{{ note.course_id }}</small>
+              </td>
+              <td>
+                <div>{{ note.uploaded_by.name }}</div>
+                <small style="color: var(--text-muted);">USN: {{ note.uploaded_by.usn }}</small>
+              </td>
+              <td>{{ note.updated_at|date:"M d, Y" }}</td>
+              <td>
+                <span class="badge badge-rejected" style="margin-bottom: 4px;">REJECTED</span>
+                <div style="font-size: 0.82rem; color: #991B1B;">
+                  {{ note.rejection_reason|default:"Curriculum or formatting requirements not met." }}
+                </div>
+              </td>
+              <td>
+                <a href="{% url 'download_note' note.id %}" class="btn btn-sm btn-outline-secondary">
+                  ⬇ {{ note.file_extension }}
+                </a>
+              </td>
+              <td>
+                <!-- Re-Approve Option -->
+                <form method="POST" action="{% url 'admin_note_action' note.id 'approve' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <button type="submit" class="btn btn-sm btn-outline-primary">
+                    Re-Approve Note
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="card" style="text-align: center; padding: 4rem 1rem;">
+      <div style="font-size: 3rem; margin-bottom: 1rem;">🛡</div>
+      <h3 style="color: var(--dark); margin-bottom: 0.5rem;">No Rejected Notes</h3>
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+        No submissions have been rejected by administrators.
+      </p>
+      <a href="{% url 'admin_dashboard' %}" class="btn btn-primary">Return to Dashboard</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

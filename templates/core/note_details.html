@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ note.title }} – EduShare{% endblock %}
+
+{% block content %}
+<div class="container container-narrow">
+  <div style="margin-bottom: 1.5rem;">
+    <a href="{% url 'browse_notes' %}" class="btn btn-sm btn-outline-secondary">&larr; Back to Browse Notes</a>
+  </div>
+
+  <div class="card" style="border-top: 5px solid var(--primary);">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <div style="display: flex; gap: 8px; margin-bottom: 0.75rem;">
+          <span class="badge badge-purple">{{ note.course_id }}</span>
+          <span class="badge badge-orange">{{ note.module }}</span>
+          {% if note.status == 'APPROVED' %}
+            <span class="badge badge-approved">Approved ✓</span>
+          {% elif note.status == 'PENDING' %}
+            <span class="badge badge-pending">Pending Review</span>
+          {% else %}
+            <span class="badge badge-rejected">Rejected</span>
+          {% endif %}
+        </div>
+        <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--dark); line-height: 1.25;">
+          {{ note.title }}
+        </h1>
+        <div style="font-size: 1.05rem; font-weight: 600; color: var(--primary); margin-top: 0.35rem;">
+          {{ note.subject }}
+        </div>
+      </div>
+
+      <div style="text-align: right;">
+        <a href="{% url 'download_note' note.id %}" class="btn btn-lg btn-accent" style="box-shadow: 0 4px 14px rgba(249, 115, 22, 0.3);">
+          ⬇ Download Note File
+        </a>
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">
+          {{ note.downloads_count }} total downloads
+        </div>
+      </div>
+    </div>
+
+    <div style="background: var(--bg-body); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 2rem; border: 1px solid var(--border-color);">
+      <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--dark); margin-bottom: 0.75rem;">
+        About These Notes
+      </h3>
+      <p style="font-size: 0.95rem; color: var(--text-main); white-space: pre-line; line-height: 1.7;">
+        {{ note.description }}
+      </p>
+    </div>
+
+    <!-- Metadata Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; padding: 1.25rem; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+      <div>
+        <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Uploaded By</div>
+        <div style="font-size: 1rem; font-weight: 700; color: var(--dark); margin-top: 2px;">{{ note.uploaded_by.name }}</div>
+        <small style="color: var(--text-muted);">USN: {{ note.uploaded_by.usn }}</small>
+      </div>
+
+      <div>
+        <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Department & Class</div>
+        <div style="font-size: 0.95rem; font-weight: 600; color: var(--dark); margin-top: 2px;">{{ note.uploaded_by.branch }}</div>
+        <small style="color: var(--text-muted);">Semester {{ note.uploaded_by.semester }} (Section {{ note.uploaded_by.section }})</small>
+      </div>
+
+      <div>
+        <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Upload Date</div>
+        <div style="font-size: 0.95rem; font-weight: 600; color: var(--dark); margin-top: 2px;">{{ note.uploaded_at|date:"F d, Y" }}</div>
+        <small style="color: var(--text-muted);">{{ note.uploaded_at|date:"h:i A" }}</small>
+      </div>
+
+      <div>
+        <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">File Type</div>
+        <div style="font-size: 0.95rem; font-weight: 700; color: var(--accent); margin-top: 2px;">
+          📄 {{ note.file_extension }} Document
+        </div>
+        <small style="color: var(--text-muted);">{{ note.filename }}</small>
+      </div>
+    </div>
+
+    <!-- Admin rejection notice if visible to uploader -->
+    {% if note.status == 'REJECTED' and note.rejection_reason %}
+      <div class="alert alert-danger">
+        <span>✕</span>
+        <div>
+          <strong>Administrator Feedback on Rejection:</strong><br>
+          {{ note.rejection_reason }}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Action buttons -->
+    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+      <a href="{% url 'browse_notes' %}" class="btn btn-outline-secondary">Browse Other Notes</a>
+      <a href="{% url 'download_note' note.id %}" class="btn btn-accent">⬇ Download Now ({{ note.filename }})</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

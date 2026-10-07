@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Academic Note – EduShare{% endblock %}
+
+{% block content %}
+<div class="container container-narrow">
+  <div style="margin-bottom: 1.5rem;">
+    <a href="{% url 'student_dashboard' %}" class="btn btn-sm btn-outline-secondary">&larr; Back to Dashboard</a>
+  </div>
+
+  <div class="card" style="border-top: 5px solid var(--accent);">
+    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 1.5rem;">
+      <div style="width: 50px; height: 50px; background: var(--accent-subtle); color: var(--accent); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+        📤
+      </div>
+      <div>
+        <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--dark); margin: 0;">
+          Upload Academic Notes
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 2px;">
+          Share study material with your peers under administrator verification.
+        </p>
+      </div>
+    </div>
+
+    <!-- Review Notice -->
+    <div class="alert alert-warning" style="margin-bottom: 2rem;">
+      <span>⏳</span>
+      <div>
+        <strong>Administrative Review Notice:</strong> After you upload, this note will be marked as <strong>PENDING</strong>. It will undergo admin moderation and will only become visible to other students once approved.
+      </div>
+    </div>
+
+    <form method="POST" action="{% url 'upload_note' %}" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {% for error in form.non_field_errors %}
+            <div>{{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.title.id_for_label }}">Note Title *</label>
+        {{ form.title }}
+        {% if form.title.errors %}
+          <div class="form-error">{{ form.title.errors.0 }}</div>
+        {% endif %}
+        <div class="form-text">e.g. Operating Systems – Process Synchronization & Deadlocks</div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label" for="{{ form.subject.id_for_label }}">Subject / Course Name *</label>
+          {{ form.subject }}
+          {% if form.subject.errors %}
+            <div class="form-error">{{ form.subject.errors.0 }}</div>
+          {% endif %}
+          <div class="form-text">e.g. Operating Systems</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="{{ form.course_id.id_for_label }}">Course ID / Subject Code *</label>
+          {{ form.course_id }}
+          {% if form.course_id.errors %}
+            <div class="form-error">{{ form.course_id.errors.0 }}</div>
+          {% endif %}
+          <div class="form-text">e.g. 21CS44 or CS401</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.module.id_for_label }}">Module / Unit *</label>
+        {{ form.module }}
+        {% if form.module.errors %}
+          <div class="form-error">{{ form.module.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.description.id_for_label }}">Detailed Description *</label>
+        {{ form.description }}
+        {% if form.description.errors %}
+          <div class="form-error">{{ form.description.errors.0 }}</div>
+        {% endif %}
+        <div class="form-text">Mention key topics covered, textbook references, formulas, or solved questions included.</div>
+      </div>
+
+      <div class="form-group" style="background: var(--bg-body); padding: 1.25rem; border: 2px dashed var(--border-color); border-radius: var(--radius-md);">
+        <label class="form-label" for="{{ form.file.id_for_label }}">Attach Notes Document (PDF, DOCX, PPTX, TXT) *</label>
+        {{ form.file }}
+        {% if form.file.errors %}
+          <div class="form-error">{{ form.file.errors.0 }}</div>
+        {% endif %}
+        <div class="form-text">Maximum file size: 25 MB. Accepted formats: PDF, DOC, DOCX, PPTX, TXT.</div>
+      </div>
+
+      <!-- Uploader info card (read-only verification) -->
+      <div style="background: #F1F5F9; border-radius: var(--radius-md); padding: 1rem; margin-bottom: 2rem; font-size: 0.9rem; color: var(--text-muted);">
+        <strong>Uploader Credentials:</strong> {{ student.name }} (USN: {{ student.usn }}) &bull; {{ student.branch }} &bull; Semester {{ student.semester }}
+      </div>
+
+      <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+        <a href="{% url 'student_dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+        <button type="submit" class="btn btn-lg btn-accent">Submit Note for Approval</button>
+      </div>
+
+    </form>
+  </div>
+</div>
+{% endblock %}

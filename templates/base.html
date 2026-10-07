@@ -1,0 +1,195 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}EduShare{% endblock %} – Academic Notes Sharing & Management</title>
+  <link rel="stylesheet" href="{% static 'css/edushare.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="container navbar-inner">
+      <a href="{% url 'home' %}" class="brand">
+        <div class="brand-icon">E</div>
+        <div class="brand-text">Edu<span>Share</span></div>
+      </a>
+
+      <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle navigation">
+        ☰
+      </button>
+
+      <ul class="nav-links" id="navLinks">
+        <li class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+          <a href="{% url 'home' %}">Home</a>
+        </li>
+        <li class="nav-item {% if request.resolver_match.url_name == 'browse_notes' %}active{% endif %}">
+          <a href="{% url 'browse_notes' %}">Browse Notes</a>
+        </li>
+
+        {% if is_admin %}
+          <!-- Admin Nav -->
+          <li class="nav-item {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+            <a href="{% url 'admin_dashboard' %}">Admin Dashboard</a>
+          </li>
+          <li class="nav-item {% if request.resolver_match.url_name == 'admin_manage_students' %}active{% endif %}">
+            <a href="{% url 'admin_manage_students' %}">
+              Students
+              {% if pending_students_count > 0 %}
+                <span class="nav-badge">{{ pending_students_count }}</span>
+              {% endif %}
+            </a>
+          </li>
+          <li class="nav-item {% if request.resolver_match.url_name == 'admin_upload_permissions' %}active{% endif %}">
+            <a href="{% url 'admin_upload_permissions' %}">Permissions</a>
+          </li>
+          <li class="nav-item {% if request.resolver_match.url_name == 'admin_pending_notes' %}active{% endif %}">
+            <a href="{% url 'admin_pending_notes' %}">
+              Pending Notes
+              {% if pending_notes_count > 0 %}
+                <span class="nav-badge">{{ pending_notes_count }}</span>
+              {% endif %}
+            </a>
+          </li>
+          <li class="nav-user">
+            <span class="nav-user-tag">Admin: {{ request.user.username }}</span>
+            <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-secondary">Logout</a>
+          </li>
+
+        {% elif is_student and current_student.is_approved %}
+          <!-- Approved Student Nav -->
+          <li class="nav-item {% if request.resolver_match.url_name == 'student_dashboard' %}active{% endif %}">
+            <a href="{% url 'student_dashboard' %}">Dashboard</a>
+          </li>
+          <li class="nav-item {% if request.resolver_match.url_name == 'my_notes' %}active{% endif %}">
+            <a href="{% url 'my_notes' %}">My Notes</a>
+          </li>
+          
+          {% if current_student.upload_permission %}
+            <li class="nav-item {% if request.resolver_match.url_name == 'upload_note' %}active{% endif %}">
+              <a href="{% url 'upload_note' %}" class="btn btn-sm btn-accent" style="color: white !important;">
+                + Upload Notes
+              </a>
+            </li>
+          {% endif %}
+
+          <li class="nav-user">
+            <span class="nav-user-tag">{{ current_student.name }} ({{ current_student.usn }})</span>
+            <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-secondary">Logout</a>
+          </li>
+
+        {% else %}
+          <!-- Guest / Public Nav -->
+          <li class="nav-item {% if request.resolver_match.url_name == 'waiting_approval' %}active{% endif %}">
+            <a href="{% url 'waiting_approval' %}">Check Status</a>
+          </li>
+          <li class="nav-item {% if request.resolver_match.url_name == 'student_login' %}active{% endif %}">
+            <a href="{% url 'student_login' %}" class="btn btn-sm btn-outline-primary">Student Login</a>
+          </li>
+          <li class="nav-item {% if request.resolver_match.url_name == 'student_register' %}active{% endif %}">
+            <a href="{% url 'student_register' %}" class="btn btn-sm btn-primary">Register</a>
+          </li>
+          <li class="nav-item {% if request.resolver_match.url_name == 'admin_login' %}active{% endif %}">
+            <a href="{% url 'admin_login' %}" class="btn btn-sm btn-outline-secondary">Admin Login</a>
+          </li>
+        {% endif %}
+      </ul>
+    </div>
+  </header>
+
+  <!-- Flash Messages -->
+  {% if messages %}
+    <div class="container" style="margin-top: 1.5rem;">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+          <span style="font-weight: 700;">
+            {% if message.tags == 'success' %}✓{% elif message.tags == 'warning' %}⚠{% elif message.tags == 'error' %}✕{% else %}ℹ{% endif %}
+          </span>
+          <div>{{ message }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Main Content -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Universal Rejection Modal -->
+  <div id="rejectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.65); z-index: 999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+    <div style="background: white; border-radius: var(--radius-lg); padding: 2rem; max-width: 480px; width: 90%; box-shadow: var(--shadow-xl); border: 1px solid var(--border-color);">
+      <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--danger); margin-bottom: 0.5rem;">Confirm Rejection</h3>
+      <p id="rejectModalTarget" style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1.25rem;">Are you sure you want to reject this item?</p>
+      
+      <form id="rejectForm" method="POST" action="">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label">Rejection Reason / Feedback (Optional):</label>
+          <textarea name="reason" class="form-control" rows="3" placeholder="Explain why this student or note is being rejected..."></textarea>
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-outline-secondary" onclick="closeRejectModal()">Cancel</button>
+          <button type="submit" class="btn btn-danger">Confirm Rejection</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
+        <div>
+          <div class="brand" style="color: white; margin-bottom: 0.75rem;">
+            <div class="brand-icon">E</div>
+            <div>Edu<span style="color: var(--accent);">Share</span></div>
+          </div>
+          <p style="font-size: 0.9rem; line-height: 1.6;">
+            A centralized academic notes sharing & management platform designed to help university students share quality course material with verified admin approvals.
+          </p>
+        </div>
+        <div>
+          <h4 style="color: white; font-size: 1rem; margin-bottom: 0.85rem;">Student Access</h4>
+          <ul style="list-style: none; font-size: 0.9rem; line-height: 2;">
+            <li><a href="{% url 'browse_notes' %}">Browse Approved Notes</a></li>
+            <li><a href="{% url 'student_register' %}">Student Registration</a></li>
+            <li><a href="{% url 'student_login' %}">Student Login</a></li>
+            <li><a href="{% url 'waiting_approval' %}">Check Approval Status</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 style="color: white; font-size: 1rem; margin-bottom: 0.85rem;">Administration</h4>
+          <ul style="list-style: none; font-size: 0.9rem; line-height: 2;">
+            <li><a href="{% url 'admin_login' %}">Admin Portal Login</a></li>
+            <li><a href="{% url 'admin_dashboard' %}">Admin Dashboard</a></li>
+            <li><a href="{% url 'admin_upload_permissions' %}">Manage Permissions</a></li>
+            <li><a href="{% url 'admin_pending_notes' %}">Pending Notes Queue</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 style="color: white; font-size: 1rem; margin-bottom: 0.85rem;">Platform Security</h4>
+          <p style="font-size: 0.88rem; line-height: 1.6;">
+            Built with strict role-based access control. Unapproved students and unauthorized uploaders are restricted at the backend view level.
+          </p>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>
+          &copy; 2026 <strong>EDUSHARE</strong> – Academic Notes Sharing & Management System. All rights reserved.
+        </div>
+        <div>
+          Unified Platform URL: <span style="color: var(--accent); font-weight: 600;">Same Website URL for All Users</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="{% static 'js/edushare.js' %}"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>
